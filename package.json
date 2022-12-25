@@ -1,0 +1,12 @@
+{
+  "name": "graphql_n_typescript_bloggingapp",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "watch-server": "npm run start-dev --prefix server"
+  },
+  "author": "",
+  "license": "ISC"
+}
