@@ -1,5 +1,5 @@
 import { Context } from "../server";
-import { Post } from "@prisma/client";
+import { Post, User } from "@prisma/client";
 interface PostCreateArgs {
     title: string
     content: string
@@ -13,6 +13,15 @@ interface PostPayloadType {
 }
 
 export const resolvers = {
+    Query: {
+        posts: (_: any, __: any, { prisma }: Context): Promise<Post[]> => {
+            return prisma.post.findMany({
+                orderBy: {
+                    createdAt: 'desc'
+                }
+            });
+        }
+    },
     Mutation: {
         postCreate: async (parent: any, {title, content}: PostCreateArgs, { prisma }: Context) : Promise<PostPayloadType> => {
             
@@ -24,7 +33,7 @@ export const resolvers = {
                     post: null
                 }
             }
-            const post = await prisma.post.create({
+            let post = await prisma.post.create({
                 data: {
                     title,
                     content,
@@ -32,10 +41,26 @@ export const resolvers = {
             }
             });
 
+            // post = {
+            //     ...post,
+            //     createdAt: new Date(post.createdAt).toLocaleString()
+            // }
+
             return {
                 userErrors: [],
                 post
             }
         }
+    },
+
+    Post: {
+        user: ({ authorId }: Post, _: any, { prisma }: Context): Promise<User | null> => {
+            return prisma.user.findUnique({
+                where: {
+                    id: authorId
+                }
+            })
+        }
+
     }
 }

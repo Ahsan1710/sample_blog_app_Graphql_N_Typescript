@@ -1,3 +1,7 @@
+type Query {
+  posts: [Post!]!
+}
+
 type Mutation {
   postCreate(title: String!, content: String): PostPayload!
 }
