@@ -3,7 +3,8 @@ type Query {
 }
 
 type Mutation {
-  postCreate(title: String!, content: String): PostPayload!
+  postCreate(input: PostInput): PostPayload!
+  postUpdate(id: ID!, input: PostInput): PostPayload!
 }
 
 type Post {
@@ -22,4 +23,9 @@ type UserError {
 type PostPayload {
   userErrors: [UserError!]!
   post: Post
+}
+
+input PostInput {
+  title: String
+  content: String
 }
