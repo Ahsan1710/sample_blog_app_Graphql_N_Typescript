@@ -1,11 +1,12 @@
 type Query {
-  posts: [Post!]!
+  posts: QueryPayload!
 }
 
 type Mutation {
   postCreate(input: PostInput): PostPayload!
   postUpdate(id: ID!, input: PostInput): PostPayload!
   postDelete(id: ID!): PostPayload
+  postPublish(id: ID!): PublishPayload
 }
 
 type Post {
@@ -24,6 +25,16 @@ type UserError {
 type PostPayload {
   userErrors: [UserError!]!
   post: Post
+}
+
+type PublishPayload {
+  userErrors: [UserError!]!
+  status: Boolean
+}
+
+type QueryPayload {
+  userErrors: [UserError!]!
+  post: [Post!]!
 }
 
 input PostInput {

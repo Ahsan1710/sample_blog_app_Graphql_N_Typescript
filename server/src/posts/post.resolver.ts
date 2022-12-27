@@ -18,14 +18,62 @@ interface PostPayloadType {
     post: Post | null
 }
 
+interface QueryPayload {
+    userErrors: {
+        message: string
+    }[],
+    post: Post[]
+}
+
+interface PublishPayload {
+    userErrors: {
+        message: string
+    }[],
+    status: boolean | null
+}
+
 export const resolvers = {
     Query: {
-        posts: (_: any, __: any, { prisma }: Context): Promise<Post[]> => {
-            return prisma.post.findMany({
+        posts: async (_: any, __: any, { prisma, token }: Context): Promise<QueryPayload> => {
+            
+            if (!token) {
+                return {
+                    userErrors: [{
+                        message: "Unauthenticated. Forbidden access"
+                    }],
+                    post: []
+                }
+            }
+
+            const access = readToken(token);
+
+            if(!access) {
+                return {
+                    userErrors: [{
+                        message: "Unauthenticated. Forbidden access"
+                    }],
+                    post: []
+                }
+            }
+
+            const posts = await prisma.post.findMany({
+                where: {
+                    OR: [{
+                    published: true
+                },
+                {
+                    authorId: access.id
+                }]
+            },
                 orderBy: {
                     createdAt: 'desc'
                 }
             });
+            
+            return {
+                userErrors: [],
+                post: posts
+            }
         }
     },
     Mutation: {
@@ -226,6 +274,85 @@ export const resolvers = {
             return {
                 userErrors: [],
                 post
+            }
+        },
+
+        postPublish: async (_: any, { id }: {id: string}, { prisma, token }: Context): Promise<PublishPayload> => {
+           
+            if (!token) {
+                return {
+                    userErrors: [{
+                        message: "Unauthenticated. Forbidden access"
+                    }],
+                    status: null
+                }
+            }
+
+            const access = readToken(token);
+
+            if(!access) {
+                return {
+                    userErrors: [{
+                        message: "Unauthenticated. Forbidden access"
+                    }],
+                    status: null
+                }
+            }
+           
+            if (!id || isNaN(Number(id))) {
+                return {
+                    userErrors: [{
+                        message: "Valid ID is required for deleting data"
+                    }],
+                    status: null
+                };
+            }
+
+            const existingRecord = await prisma.post.findUnique({
+                select: {
+                    authorId: true,
+                    published: true
+                },
+                where: {
+                    id: Number(id)
+                }
+            });
+
+            if (!existingRecord) {
+                return {
+                    userErrors: [{
+                        message: "Post doesn't exist. Try again"
+                    }],
+                    status: null
+                    
+                }
+            }
+
+            if (!(existingRecord.authorId === access.id)) {
+                return {
+                    userErrors: [{
+                        message: "Forbidden action. Unauthorized to do the action"
+                    }],
+                    status: null
+                    
+                }
+            }
+
+            const post = await prisma.post.update({
+                data: {
+                    published: !existingRecord.published
+                },
+                select: {
+                    published: true
+                },
+                where: {
+                    id: Number(id)
+                }
+            });
+
+            return {
+                userErrors: [],
+                status: post.published
             }
         }
     },
