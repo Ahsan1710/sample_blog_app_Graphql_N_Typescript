@@ -74,7 +74,7 @@ export const resolvers = {
                 }
             }
 
-            const existingRecord = prisma.post.findUnique({
+            const existingRecord = await prisma.post.findUnique({
                 where: {
                     id: Number(id)
                 }
