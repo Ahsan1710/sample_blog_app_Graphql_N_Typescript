@@ -55,10 +55,10 @@ export const resolvers = {
         
         postUpdate: async (_: any, { id, input}: {id: string, input: PostArgs}, { prisma }: Context): Promise<PostPayloadType> => {
             const { title, content} = input;
-            if (!id) {
+            if (!id || isNaN(Number(id))) {
                 return {
                     userErrors: [{
-                        message: "ID is required for updating data"
+                        message: "Valid ID is required for updating data"
                     }],
                     post: null
                 };
@@ -83,7 +83,7 @@ export const resolvers = {
             if (!existingRecord) {
                 return {
                     userErrors: [{
-                        message: "Invalid post id. Post doesn't find. Try again"
+                        message: "Doesn't find the post. Try again witha valid post"
                     }],
                     post: null
                     
@@ -94,6 +94,44 @@ export const resolvers = {
                 data: {
                     ...input
                 },
+                where: {
+                    id: Number(id)
+                }
+            });
+
+            return {
+                userErrors: [],
+                post
+            }
+        },
+
+        postDelete: async (_: any, { id }: {id: string}, { prisma }: Context): Promise<PostPayloadType> => {
+           if (!id || isNaN(Number(id))) {
+                return {
+                    userErrors: [{
+                        message: "Valid ID is required for deleting data"
+                    }],
+                    post: null
+                };
+            }
+
+            const existingRecord = await prisma.post.findUnique({
+                where: {
+                    id: Number(id)
+                }
+            });
+
+            if (!existingRecord) {
+                return {
+                    userErrors: [{
+                        message: "Post doesn't exist. Try again"
+                    }],
+                    post: null
+                    
+                }
+            }
+
+            const post = await prisma.post.delete({
                 where: {
                     id: Number(id)
                 }
