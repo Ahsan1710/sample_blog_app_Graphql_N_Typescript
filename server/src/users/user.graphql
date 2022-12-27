@@ -25,7 +25,7 @@ type Profile {
 
 type UserPayload {
   userErrors: [UserError!]!
-  user: User
+  token: String
 }
 
 input userCredentials {

@@ -7,6 +7,7 @@ const prisma = new PrismaClient();
 
 export interface Context {
     prisma: PrismaClient<Prisma.PrismaClientOptions, never, Prisma.RejectOnNotFound | Prisma.RejectPerOperation | undefined>
+    token: string | null
 }
 
 const typeDefs = loadFilesSync('**/*', {
@@ -25,6 +26,7 @@ const server = new ApolloServer({
 async function startServer() {
     const { url } = await startStandaloneServer(server, {
         context: async ({ req }) => ({
+            token: req.headers.auth,
             prisma,
         }),
         listen: {port: 3000}

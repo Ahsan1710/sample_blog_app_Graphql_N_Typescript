@@ -14,8 +14,13 @@
     "@apollo/server": "^4.3.0",
     "@graphql-tools/load-files": "^6.6.1",
     "@prisma/client": "^4.8.0",
+    "@types/bcrypt": "^5.0.0",
+    "@types/jsonwebtoken": "^9.0.0",
     "@types/validator": "^13.7.10",
+    "bcrypt": "^5.1.0",
+    "dotenv": "^16.0.3",
     "graphql": "^16.6.0",
+    "jsonwebtoken": "^9.0.0",
     "prisma": "^4.8.0",
     "validator": "^13.7.0"
   },
