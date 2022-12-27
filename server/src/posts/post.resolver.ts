@@ -1,9 +1,14 @@
 import { Context } from "../server";
 import { Post, User } from "@prisma/client";
+import { readToken } from "../utils/securityAlgos";
 
-interface PostArgs {
+interface Input {
     title?: string
     content?: string
+}
+
+interface PostArgs {
+    input: Input
 }
 
 interface PostPayloadType {
@@ -24,8 +29,29 @@ export const resolvers = {
         }
     },
     Mutation: {
-        postCreate: async (parent: any, {title, content}: PostArgs, { prisma }: Context) : Promise<PostPayloadType> => {
-            
+        postCreate: async (parent: any, {input}: PostArgs, { prisma, token }: Context) : Promise<PostPayloadType> => {
+            const {title, content} = input;
+            if (!token) {
+                return {
+                    userErrors: [{
+                        message: "Unauthenticated. Forbidden access"
+                    }],
+                    post: null
+                }
+            }
+
+            const access = readToken(token);
+
+            if(!access) {
+                return {
+                    userErrors: [{
+                        message: "Unauthenticated. Forbidden access"
+                    }],
+                    post: null
+                }
+            }
+
+
             if(!title || !content) {
                 return {
                     userErrors: [{
@@ -34,18 +60,14 @@ export const resolvers = {
                     post: null
                 }
             }
+
             let post = await prisma.post.create({
                 data: {
                     title,
                     content,
-                    authorId: 1
+                    authorId: access.id
             }
             });
-
-            // post = {
-            //     ...post,
-            //     createdAt: new Date(post.createdAt).toLocaleString()
-            // }
 
             return {
                 userErrors: [],
@@ -53,8 +75,30 @@ export const resolvers = {
             }
         },
         
-        postUpdate: async (_: any, { id, input}: {id: string, input: PostArgs}, { prisma }: Context): Promise<PostPayloadType> => {
+        postUpdate: async (_: any, { id, input}: {id: string, input: Input}, { prisma, token }: Context): Promise<PostPayloadType> => {
+            
             const { title, content} = input;
+
+            if (!token) {
+                return {
+                    userErrors: [{
+                        message: "Unauthenticated. Forbidden access"
+                    }],
+                    post: null
+                }
+            }
+
+            const access = readToken(token);
+
+            if(!access) {
+                return {
+                    userErrors: [{
+                        message: "Unauthenticated. Forbidden access"
+                    }],
+                    post: null
+                }
+            }
+
             if (!id || isNaN(Number(id))) {
                 return {
                     userErrors: [{
@@ -90,6 +134,16 @@ export const resolvers = {
                 }
             }
 
+            if (!(existingRecord.authorId === access.id)) {
+                return {
+                    userErrors: [{
+                        message: "Forbidden action. Unauthorized to update"
+                    }],
+                    post: null
+                    
+                }
+            }
+
             const post = await prisma.post.update({
                 data: {
                     ...input
@@ -105,8 +159,30 @@ export const resolvers = {
             }
         },
 
-        postDelete: async (_: any, { id }: {id: string}, { prisma }: Context): Promise<PostPayloadType> => {
-           if (!id || isNaN(Number(id))) {
+        postDelete: async (_: any, { id }: {id: string}, { prisma, token }: Context): Promise<PostPayloadType> => {
+           
+
+            if (!token) {
+                return {
+                    userErrors: [{
+                        message: "Unauthenticated. Forbidden access"
+                    }],
+                    post: null
+                }
+            }
+
+            const access = readToken(token);
+
+            if(!access) {
+                return {
+                    userErrors: [{
+                        message: "Unauthenticated. Forbidden access"
+                    }],
+                    post: null
+                }
+            }
+           
+            if (!id || isNaN(Number(id))) {
                 return {
                     userErrors: [{
                         message: "Valid ID is required for deleting data"
@@ -125,6 +201,16 @@ export const resolvers = {
                 return {
                     userErrors: [{
                         message: "Post doesn't exist. Try again"
+                    }],
+                    post: null
+                    
+                }
+            }
+
+            if (!(existingRecord.authorId === access.id)) {
+                return {
+                    userErrors: [{
+                        message: "Forbidden action. Unauthorized to delete"
                     }],
                     post: null
                     
