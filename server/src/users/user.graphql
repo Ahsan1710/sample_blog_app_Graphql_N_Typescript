@@ -1,3 +1,12 @@
+type Mutation {
+  userSignup(
+    credentials: userCredentials!
+    name: String!
+    bio: String
+  ): UserPayload
+  userSignin(credentials: userCredentials!): UserPayload
+}
+
 type User {
   id: ID!
   name: String!
@@ -12,4 +21,14 @@ type Profile {
   bio: String!
   createdAt: String!
   user: User!
+}
+
+type UserPayload {
+  userErrors: [UserError!]!
+  user: User
+}
+
+input userCredentials {
+  email: String!
+  password: String!
 }
